@@ -19,10 +19,10 @@ RUN apt-get update
 RUN apt-get upgrade
 
 RUN useradd -m ${GERRIT_USER}
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-6-jre-headless sudo git-core supervisor vim-tiny
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-7-jre-headless sudo git-core supervisor vim-tiny
 RUN mkdir -p /var/log/supervisor
 
-ADD http://gerrit-releases.storage.googleapis.com/gerrit-2.8.5.war /tmp/gerrit.war
+ADD http://gerrit-releases.storage.googleapis.com/gerrit-2.9.war /tmp/gerrit.war
 #ADD gerrit-2.8.war /tmp/gerrit.war
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -37,6 +37,10 @@ RUN java -jar $GERRIT_WAR init --batch -d $GERRIT_HOME/gerrit
 # clobber the gerrit config. set the URL to localhost:8080
 ADD gerrit.config $GERRIT_HOME/gerrit/etc/gerrit.config
 
+unzip -j $GERRIT_WAR WEB-INF/plugins/replication.jar -d $GERRIT_HOME/gerrit/plugins
+ssh-keygen
+
 USER root
+RUN chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
 EXPOSE 8080 29418
 CMD ["/usr/sbin/service","supervisor","start"]

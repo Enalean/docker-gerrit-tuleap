@@ -1,10 +1,14 @@
-docker-gerrit
-=============
+docker run --name=gerrit-data -v /data busybox true
 
-Build a Docker container with the gerrit code review system
+docker run -ti --rm=true --name=gerrit -e LDAP_SERVER=ldap://ldap-write.ldap-dev.dev.docker -e SERVER_NAME=gerrit.gerrit.dev.docker -e TULEAP_SERVER_NAME=red.tuleap-aio-dev.dev.docker --volumes-from=gerrit-data gerrit
 
-Built on top of Ubuntu Trusty (14.04) and gerrit 2.8.5 
+On gerrit
+- Generate http password
+- Set gerrit permissions
 
-    $ docker pull larrycai/gerrit
-    $ docker run -P -d -t larrycai/gerrit # wait for a while to be started.
+On Tuleap:
+- execute the setup script
+- add gerrit admin entry with http password and ssh key dumped at run
+- process system events (dump ssh key)
 
+Restart gerrit instance with "ssh" as option

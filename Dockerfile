@@ -9,8 +9,7 @@ MAINTAINER Larry Cai <larry.caiyu@gmail.com>
 ENV GERRIT_HOME /home/gerrit
 ENV GERRIT_USER gerrit
 ENV GERRIT_WAR /home/gerrit/gerrit.war
-
-#RUN echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
+ENV GERRIT_UPSTREAM gerrit-2.5.6.war
 
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
@@ -20,13 +19,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-7-jre-headless sud
 RUN mkdir -p /var/log/supervisor
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget
-RUN wget http://gerrit-releases.storage.googleapis.com/gerrit-2.8.6.1.war
+RUN wget http://gerrit-releases.storage.googleapis.com/${GERRIT_UPSTREAM}
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN mkdir -p $GERRIT_HOME/gerrit
-RUN mv gerrit-2.8.6.1.war $GERRIT_WAR
+RUN mv ${GERRIT_UPSTREAM} $GERRIT_WAR
 RUN chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
-#RUN rm -f /etc/apt/apt.conf.d/01proxy
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y unzip
 

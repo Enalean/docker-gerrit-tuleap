@@ -2,6 +2,14 @@
 
 set -ex
 
+if [ -f /data/etc/gerrit.config ]; then
+    cp /data/etc/gerrit.config /home/gerrit/gerrit/etc/gerrit.config
+fi
+
+if [ -f /data/etc/etc/replication.config ]; then
+    cp /data/etc/etc/replication.config /home/gerrit/gerrit/etc/replication.config
+fi
+
 sed -i "s/%SERVER_NAME%/$SERVER_NAME/" /home/gerrit/gerrit/etc/gerrit.config
 sed -i "s#%LDAP_SERVER%#$LDAP_SERVER#" /home/gerrit/gerrit/etc/gerrit.config
 sed -i "s#%TULEAP_SERVER_NAME%#$TULEAP_SERVER_NAME#" /home/gerrit/gerrit/etc/replication.config

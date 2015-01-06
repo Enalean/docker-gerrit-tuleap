@@ -4,7 +4,7 @@
 
 FROM  ubuntu:trusty
 
-MAINTAINER Larry Cai <larry.caiyu@gmail.com>
+MAINTAINER Manuel Vacelet, manuel.vacelet@enalean.com
 
 ENV GERRIT_HOME /home/gerrit
 ENV GERRIT_USER gerrit
@@ -12,14 +12,14 @@ ENV GERRIT_WAR /home/gerrit/gerrit.war
 
 #RUN echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
 
-RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-7-jre-headless sudo git-core supervisor vim-tiny wget unzip
 
 RUN useradd -m ${GERRIT_USER}
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-7-jre-headless sudo git-core supervisor vim-tiny
+
 RUN mkdir -p /var/log/supervisor
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget
 RUN wget http://gerrit-releases.storage.googleapis.com/gerrit-2.8.6.1.war
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -27,8 +27,6 @@ RUN mkdir -p $GERRIT_HOME/gerrit
 RUN mv gerrit-2.8.6.1.war $GERRIT_WAR
 RUN chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
 #RUN rm -f /etc/apt/apt.conf.d/01proxy
-
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y unzip
 
 USER gerrit
 RUN java -jar $GERRIT_WAR init --batch -d $GERRIT_HOME/gerrit

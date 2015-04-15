@@ -41,4 +41,9 @@ if [ "$1" == "ssh" ]; then
     su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@$TULEAP_SERVER_NAME info"
 fi
 
+# Import LDAP ssl certificate in keystore
+if [ -f "/data/server.crt" ]; then
+    keytool -importcert -alias ldap-tuleap-local-server -file /data/server.crt -keystore /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts -storepass changeit
+fi
+
 exec /usr/sbin/service supervisor start

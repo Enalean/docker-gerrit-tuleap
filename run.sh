@@ -10,7 +10,7 @@ if [ -f /data/etc/etc/replication.config ]; then
     cp /data/etc/etc/replication.config /home/gerrit/gerrit/etc/replication.config
 fi
 
-sed -i "s/%SERVER_NAME%/$SERVER_NAME/" /home/gerrit/gerrit/etc/gerrit.config
+sed -i "s#%SERVER_NAME%#$GERRIT_SERVER_NAME#" /home/gerrit/gerrit/etc/gerrit.config
 sed -i "s#%LDAP_SERVER%#$LDAP_SERVER#" /home/gerrit/gerrit/etc/gerrit.config
 sed -i "s#%TULEAP_SERVER_NAME%#$TULEAP_SERVER_NAME#" /home/gerrit/gerrit/etc/replication.config
 
@@ -38,12 +38,13 @@ ln -s /data/db /home/gerrit/gerrit/db
 ln -s /data/logs /home/gerrit/gerrit/logs
 
 if [ "$1" == "ssh" ]; then
-    su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@$TULEAP_SERVER_NAME info"
+    echo "Pairing with Tuleap server"
+    exec su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@$TULEAP_SERVER_NAME info"
 fi
 
 # Import LDAP ssl certificate in keystore
 if [ -f "/data/server.crt" ]; then
-    keytool -importcert -alias ldap-tuleap-local-server -file /data/server.crt -keystore /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts -storepass changeit
+    yes | keytool -importcert -alias ldap-tuleap-local-server -file /data/server.crt -keystore /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts -storepass changeit
 fi
 
 exec /usr/sbin/service supervisor start

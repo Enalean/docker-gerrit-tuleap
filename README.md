@@ -1,6 +1,8 @@
 docker run --name=gerrit-data -v /data busybox true
 
-docker run -ti --rm=true --name=gerrit -e LDAP_SERVER=ldap://ldap-write.ldap-dev.dev.docker -e GERRIT_SERVER_NAME=gerrit.gerrit.dev.docker -e TULEAP_SERVER_NAME=red.tuleap-aio-dev.dev.docker --volumes-from=gerrit-data gerrit
+# You need to have 2 running containers, one for ldap, one for tuleap.
+
+docker run -ti --rm=true --name=gerrit --link ldap:ldap --link tuleap:web -e GERRIT_SERVER_NAME=gerrit.gerrit-tuleap.docker --volumes-from=gerrit-data gerrit
 
 On gerrit
 - Generate http password
@@ -11,4 +13,3 @@ On Tuleap:
 - add gerrit admin entry with http password and ssh key dumped at run
 - process system events (dump ssh key)
 
-Restart gerrit instance with "ssh" as option

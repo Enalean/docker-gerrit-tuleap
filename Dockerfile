@@ -36,7 +36,9 @@ ADD gerrit.config $GERRIT_HOME/gerrit/etc/gerrit.config
 ADD replication.config $GERRIT_HOME/gerrit/etc/replication.config
 
 RUN unzip -j $GERRIT_WAR WEB-INF/plugins/replication.jar -d $GERRIT_HOME/gerrit/plugins
-# Delete plugin TBA
+
+# Delete plugin
+RUN wget -O $GERRIT_HOME/gerrit/plugins/delete-project.jar https://tuleap.net/file/download.php/101/92/p22_r77/delete-project.jar 
 
 USER root
 RUN chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME

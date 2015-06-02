@@ -1,7 +1,3 @@
-# gerrit
-#
-# VERSION               0.0.2
-
 FROM  ubuntu:trusty
 
 MAINTAINER Manuel Vacelet, manuel.vacelet@enalean.com
@@ -10,40 +6,37 @@ ENV GERRIT_HOME /home/gerrit
 ENV GERRIT_USER gerrit
 ENV GERRIT_WAR /home/gerrit/gerrit.war
 
-#RUN echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
+
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-7-jre-headless sudo git-core supervisor vim-tiny wget unzip
+    DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-7-jre-headless sudo git-core supervisor vim-tiny wget unzip && \
+    wget http://gerrit-releases.storage.googleapis.com/gerrit-2.8.6.1.war && \
+    wget -O /tmp/delete-project.jar https://tuleap.net/file/download.php/101/92/p22_r77/delete-project.jar
 
-RUN useradd -m ${GERRIT_USER}
-
-RUN mkdir -p /var/log/supervisor
-
-RUN wget http://gerrit-releases.storage.googleapis.com/gerrit-2.8.6.1.war
-ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-RUN mkdir -p $GERRIT_HOME/gerrit
-RUN mv gerrit-2.8.6.1.war $GERRIT_WAR
-RUN chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
-#RUN rm -f /etc/apt/apt.conf.d/01proxy
+RUN useradd -m ${GERRIT_USER} && \
+    mkdir -p /var/log/supervisor && \
+    mkdir -p $GERRIT_HOME/gerrit && \
+    mv gerrit-2.8.6.1.war $GERRIT_WAR && \
+    chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
 
 USER gerrit
-RUN java -jar $GERRIT_WAR init --batch -d $GERRIT_HOME/gerrit
 
-# clobber the gerrit config. set the URL to localhost:8080
-ADD gerrit.config $GERRIT_HOME/gerrit/etc/gerrit.config
-ADD replication.config $GERRIT_HOME/gerrit/etc/replication.config
+RUN java -jar $GERRIT_WAR init --batch -d $GERRIT_HOME/gerrit && \
+    unzip -j $GERRIT_WAR WEB-INF/plugins/replication.jar -d $GERRIT_HOME/gerrit/plugins && \
+    cp /tmp/delete-project.jar $GERRIT_HOME/gerrit/plugins
 
-RUN unzip -j $GERRIT_WAR WEB-INF/plugins/replication.jar -d $GERRIT_HOME/gerrit/plugins
-
-# Delete plugin
-RUN wget -O $GERRIT_HOME/gerrit/plugins/delete-project.jar https://tuleap.net/file/download.php/101/92/p22_r77/delete-project.jar 
+COPY gerrit.config $GERRIT_HOME/gerrit/etc/gerrit.config
+COPY replication.config $GERRIT_HOME/gerrit/etc/replication.config
 
 USER root
-RUN chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
 
-ADD run.sh /run.sh
+RUN rm -rf /tmp/delete-project.jar $GERRIT_WAR
+#RUN chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
+
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+COPY run.sh /run.sh
 
 VOLUME /data
 

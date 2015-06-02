@@ -25,11 +25,13 @@ sed -i "s#%SERVER_NAME%#$GERRIT_SERVER_NAME#" /home/gerrit/gerrit/etc/gerrit.con
 sed -i "s#%LDAP_SERVER%#ldap://$LDAP_PORT_389_TCP_ADDR#" /home/gerrit/gerrit/etc/gerrit.config
 sed -i "s#%TULEAP_SERVER_NAME%#$TULEAP_ENV_VIRTUAL_HOST#" /home/gerrit/gerrit/etc/replication.config
 
+init=false
+
 if [ ! -d /data/.ssh ]; then
+    init=true
     mkdir -p /data/.ssh
     chmod 0700 /data/.ssh
     ssh-keygen -P "" -f /data/.ssh/id_rsa
-    cat /data/.ssh/id_rsa.pub
 fi
 chown -R gerrit:gerrit /data/.ssh
 ln -s /data/.ssh /home/gerrit/.ssh
@@ -38,22 +40,24 @@ if [ ! -d /data/git ]; then
     mv /home/gerrit/gerrit/git /data
     mv /home/gerrit/gerrit/db /data
     mv /home/gerrit/gerrit/logs /data
+    mkdir /data/etc
+    mv /home/gerrit/gerrit/etc/ssh_host_key /data/etc
 else
     rm -rf /home/gerrit/gerrit/git
     rm -rf /home/gerrit/gerrit/db
     rm -rf /home/gerrit/gerrit/logs
+    rm -rf /home/gerrit/gerrit/etc/ssh_host_key
 fi
 
 ln -s /data/git /home/gerrit/gerrit/git
 ln -s /data/db /home/gerrit/gerrit/db
 ln -s /data/logs /home/gerrit/gerrit/logs
+ln -s /data/etc/ssh_host_key /home/gerrit/gerrit/etc/ssh_host_key
 
-if [ "$1" == "init" ]; then
-    true
-else
+if [ "$init" = "false" ]; then
     echo "Pairing with Tuleap server"
     sleep 5
-    su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@$TULEAP_SERVER_NAME info"
+    su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@$TULEAP_ENV_VIRTUAL_HOST info"
 fi
 
 # Import LDAP ssl certificate in keystore

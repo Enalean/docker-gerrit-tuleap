@@ -2,7 +2,7 @@ docker run --name=gerrit-data -v /data busybox true
 
 # You need to have 2 running containers, one for ldap, one for tuleap.
 
-docker run -ti --rm=true --name=gerrit --link ldap:ldap --link tuleap:web -e GERRIT_SERVER_NAME=gerrit.gerrit-tuleap.docker --volumes-from=gerrit-data gerrit
+docker run -ti --rm=true --name=gerrit --link ldap:ldap --link tuleap:tuleap -e GERRIT_SERVER_NAME=gerrit.gerrit-tuleap.docker --volumes-from=gerrit-data enalean/gerrit-tuleap
 
 On gerrit
 - Generate http password

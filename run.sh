@@ -2,17 +2,6 @@
 
 set -ex
 
-if [ -z "$LDAP_PORT_389_TCP_ADDR" ]; then
-    echo "*** ERROR: this image is supposed to be linked to an LDAP server"
-    echo "Use --link some_container:ldap"
-    exit 1
-fi
-
-if [ -z "$TULEAP_ENV_VIRTUAL_HOST" ]; then
-    echo "*** ERROR: this image is supposed to be linked to a Tuleap server"
-    echo "User --link some_container:tuleap"
-fi
-
 if [ -f /data/etc/gerrit.config ]; then
     cp /data/etc/gerrit.config /home/gerrit/gerrit/etc/gerrit.config
 fi
@@ -22,8 +11,8 @@ if [ -f /data/etc/etc/replication.config ]; then
 fi
 
 sed -i "s#%SERVER_NAME%#$GERRIT_SERVER_NAME#" /home/gerrit/gerrit/etc/gerrit.config
-sed -i "s#%LDAP_SERVER%#ldap://$LDAP_PORT_389_TCP_ADDR#" /home/gerrit/gerrit/etc/gerrit.config
-sed -i "s#%TULEAP_SERVER_NAME%#$TULEAP_ENV_VIRTUAL_HOST#" /home/gerrit/gerrit/etc/replication.config
+sed -i "s#%LDAP_SERVER%#ldap://ldap#" /home/gerrit/gerrit/etc/gerrit.config
+sed -i "s#%TULEAP_SERVER_NAME%#tuleap#" /home/gerrit/gerrit/etc/replication.config
 
 init=false
 
@@ -57,7 +46,7 @@ ln -s /data/etc/ssh_host_key /home/gerrit/gerrit/etc/ssh_host_key
 if [ "$init" = "false" ]; then
     echo "Pairing with Tuleap server"
     sleep 5
-    su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@$TULEAP_ENV_VIRTUAL_HOST info"
+    su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@tuleap info"
 fi
 
 # Import LDAP ssl certificate in keystore

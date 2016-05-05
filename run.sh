@@ -1,18 +1,25 @@
 #!/bin/bash
 
-set -ex
+function set_replication_config {
+  gosu ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/replication.config" "$@"
+}
 
-if [ -f /data/etc/gerrit.config ]; then
-    cp /data/etc/gerrit.config /home/gerrit/gerrit/etc/gerrit.config
-fi
+# Customize gerrit.config
 
-if [ -f /data/etc/etc/replication.config ]; then
-    cp /data/etc/etc/replication.config /home/gerrit/gerrit/etc/replication.config
-fi
+# Section gerrit
+[ -z "${GERRIT_BASEPATH}" ] || set_gerrit_config gerrit.basePath "${GERRIT_BASEPATH}"
+# Section sshd
+[ -z "${SSHD_LISTENADDRESS}" ] || set_gerrit_config sshd.listenAddress "${SSHD_LISTENADDRESS}"
+# Section cache
+[ -z "${CACHE_DIRECTORY}" ] || set_gerrit_config cache.directory "${CACHE_DIRECTORY}"
+# Install external plugins
+cp -f ${GERRIT_HOME}/replication.jar ${GERRIT_SITE}/plugins/replication.jar
 
-sed -i "s#%SERVER_NAME%#$GERRIT_SERVER_NAME#" /home/gerrit/gerrit/etc/gerrit.config
-sed -i "s#%LDAP_SERVER%#ldap://ldap#" /home/gerrit/gerrit/etc/gerrit.config
-sed -i "s#%TULEAP_SERVER_NAME%#tuleap#" /home/gerrit/gerrit/etc/replication.config
+# Customize replication.config
+[ -z "${REMOTE_NAME_URL}" ] || set_replication_config remote.${REMOTE_NAME}.url "${REMOTE_NAME_URL}"
+[ -z "${REMOTE_NAME_PUSH}" ] || set_replication_config remote.${REMOTE_NAME}.push "${REMOTE_NAME_PUSH}"
+[ -z "${REMOTE_NAME_PUSH}" ] || set_replication_config remote.${REMOTE_NAME}.push "${REMOTE_NAME_PUSH}"
+[ -z "${REMOTE_NAME_AUTHGROUP}" ] || set_replication_config remote.${REMOTE_NAME}.authGroup "${REMOTE_NAME_AUTHGROUP}"
 
 init=false
 
@@ -22,36 +29,34 @@ if [ ! -d /data/.ssh ]; then
     chmod 0700 /data/.ssh
     ssh-keygen -P "" -f /data/.ssh/id_rsa
 fi
-chown -R gerrit:gerrit /data/.ssh
-ln -s /data/.ssh /home/gerrit/.ssh
+chown -R ${GERRIT_USER}:${GERRIT_USER} /data/.ssh
+ln -s /data/.ssh ${GERRIT_HOME}/.ssh
 
 if [ ! -d /data/git ]; then
-    mv /home/gerrit/gerrit/git /data
-    mv /home/gerrit/gerrit/db /data
-    mv /home/gerrit/gerrit/logs /data
+    mv ${GERRIT_HOME}/git /data
+    mv ${GERRIT_HOME}/db /data
+    mv ${GERRIT_HOME}/logs /data
     mkdir /data/etc
-    mv /home/gerrit/gerrit/etc/ssh_host_key /data/etc
+    mv ${GERRIT_HOME}/etc/ssh_host_key /data/etc
 else
-    rm -rf /home/gerrit/gerrit/git
-    rm -rf /home/gerrit/gerrit/db
-    rm -rf /home/gerrit/gerrit/logs
-    rm -rf /home/gerrit/gerrit/etc/ssh_host_key
+    rm -rf ${GERRIT_HOME}/git
+    rm -rf ${GERRIT_HOME}/db
+    rm -rf ${GERRIT_HOME}/logs
+    rm -rf ${GERRIT_HOME}/etc/ssh_host_key
 fi
 
-ln -s /data/git /home/gerrit/gerrit/git
-ln -s /data/db /home/gerrit/gerrit/db
-ln -s /data/logs /home/gerrit/gerrit/logs
-ln -s /data/etc/ssh_host_key /home/gerrit/gerrit/etc/ssh_host_key
+ln -s /data/git ${GERRIT_HOME}/git
+ln -s /data/db ${GERRIT_HOME}/db
+ln -s /data/logs ${GERRIT_HOME}/logs
+ln -s /data/etc/ssh_host_key ${GERRIT_HOME}/etc/ssh_host_key
 
 if [ "$init" = "false" ]; then
     echo "Pairing with Tuleap server"
     sleep 5
-    su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@tuleap info"
+    su -l ${GERRIT_USER} -c "ssh -oStrictHostKeyChecking=no gitolite@${REMOTE_NAME} info"
 fi
 
 # Import LDAP ssl certificate in keystore
 if [ -f "/data/server.crt" ]; then
     yes | keytool -importcert -alias ldap-tuleap-local-server -file /data/server.crt -keystore /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts -storepass changeit
 fi
-
-exec /usr/sbin/service supervisor start

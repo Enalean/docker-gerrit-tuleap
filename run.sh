@@ -18,7 +18,6 @@ cp -f ${GERRIT_HOME}/replication.jar ${GERRIT_SITE}/plugins/replication.jar
 # Customize replication.config
 [ -z "${REMOTE_NAME_URL}" ] || set_replication_config remote.${REMOTE_NAME}.url "${REMOTE_NAME_URL}"
 [ -z "${REMOTE_NAME_PUSH}" ] || set_replication_config remote.${REMOTE_NAME}.push "${REMOTE_NAME_PUSH}"
-[ -z "${REMOTE_NAME_PUSH}" ] || set_replication_config remote.${REMOTE_NAME}.push "${REMOTE_NAME_PUSH}"
 [ -z "${REMOTE_NAME_AUTHGROUP}" ] || set_replication_config remote.${REMOTE_NAME}.authGroup "${REMOTE_NAME_AUTHGROUP}"
 
 init=false
@@ -33,22 +32,27 @@ chown -R ${GERRIT_USER}:${GERRIT_USER} /data/.ssh
 ln -s /data/.ssh ${GERRIT_HOME}/.ssh
 
 if [ ! -d /data/git ]; then
-    mv ${GERRIT_HOME}/git /data
-    mv ${GERRIT_HOME}/db /data
-    mv ${GERRIT_HOME}/logs /data
+    if [ ! -d ${GERRIT_SITE}/git ]; then
+        mkdir ${GERRIT_SITE}/git
+        chown ${GERRIT_USER}:${GERRIT_USER} ${GERRIT_SITE}/git
+    fi
+
+    mv ${GERRIT_SITE}/git /data
+    mv ${GERRIT_SITE}/db /data
+    mv ${GERRIT_SITE}/logs /data
     mkdir /data/etc
-    mv ${GERRIT_HOME}/etc/ssh_host_key /data/etc
+    mv ${GERRIT_SITE}/etc/ssh_host_key /data/etc
 else
-    rm -rf ${GERRIT_HOME}/git
-    rm -rf ${GERRIT_HOME}/db
-    rm -rf ${GERRIT_HOME}/logs
-    rm -rf ${GERRIT_HOME}/etc/ssh_host_key
+    rm -rf ${GERRIT_SITE}/git
+    rm -rf ${GERRIT_SITE}/db
+    rm -rf ${GERRIT_SITE}/logs
+    rm -rf ${GERRIT_SITE}/etc/ssh_host_key
 fi
 
-ln -s /data/git ${GERRIT_HOME}/git
-ln -s /data/db ${GERRIT_HOME}/db
-ln -s /data/logs ${GERRIT_HOME}/logs
-ln -s /data/etc/ssh_host_key ${GERRIT_HOME}/etc/ssh_host_key
+ln -s /data/git ${GERRIT_SITE}/git
+ln -s /data/db ${GERRIT_SITE}/db
+ln -s /data/logs ${GERRIT_SITE}/logs
+ln -s /data/etc/ssh_host_key ${GERRIT_SITE}/etc/ssh_host_key
 
 if [ "$init" = "false" ]; then
     echo "Pairing with Tuleap server"

@@ -1,0 +1,49 @@
+gerritdb:
+  build: .
+  dockerfile: ./Dockerfile
+  container_name: gerritdb
+  ports:
+    - 5432:5432
+  environment:
+    - PGDATA=/var/lib/postgresql/data/pgdata              # postgresql
+    - POSTGRES_USER=gerrit2                               # postgresql
+    - POSTGRES_PASSWORD=pppppppppppppp                    # postgresql
+    - POSTGRES_DB=reviewdb                                # postgresql
+
+gerrit:
+  build: .
+  dockerfile: ./Dockerfile
+  container_name: gerrit
+  links:
+    - gerritdb:db
+  ports:
+    - "8080:8080"                                         # http
+    - "29418:29418"                                       # ssh
+  environment:
+    # Example of config:
+    # SERVER_LDAP	  					 192.168.1.120
+    # SERVER_TULEAP						 192.168.1.121
+    # SERVER_GERRIT 					 192.168.1.122
+
+    - GERRIT_BASEPATH=git                 # gerrit.config [gerrit]
+    - WEBURL=http://192.168.1.122:8080    # gerrit.config [gerrit]
+    - DATABASE_TYPE=postgresql            # gerrit.config [database]
+    - AUTH_TYPE=LDAP                      # gerrit.config [auth]
+    - LDAP_SERVER=192.168.1.120           # gerrit.config [auth]
+    - LDAP_ACCOUNTBASE=ou=people,dc=tuleap,dc=local       # gerrit.config [auth]
+    - LDAP_GROUPBASE=ou=groups,dc=tuleap,dc=local         # gerrit.config [auth]
+    - LDAP_ACCOUNTFULLNAME=cn             # gerrit.config [auth]
+    - SMTP_SERVER=localhost               # gerrit.config [sendemail]
+    - SSHD_LISTENADDRESS=*:29418          # gerrit.config [sshd]
+    - HTTPD_LISTENURL=http://*:8080/      # gerrit.config [httpd]
+    - CACHE_DIRECTORY=cache               # gerrit.config [cache]
+
+    - REMOTE_NAME=192.168.1.121           # replication.config
+    - REMOTE_NAME_URL=gitolite@192.168.1.121/$${name}.git # replication.config
+    - REMOTE_NAME_PUSH_1=+refs/heads/*:refs/heads/*       # replication.config
+    - REMOTE_NAME_PUSH_2=+refs/tags/*:refs/tags/*         # replication.config
+    - REMOTE_NAME_AUTHGROUP=192.168.1.121-replication     # replication.config
+
+    - DB_PORT=5432                        # gerritdb. config postgresql
+    - DB_ENV_USER=postgres                # gerritdb. config postgresql
+    - DB_ENV_PASS=pppppppppppppp          # gerritdb. config postgresql

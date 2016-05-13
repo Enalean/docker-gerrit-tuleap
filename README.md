@@ -1,3 +1,7 @@
+missing modify:
+- gerrit tuleap-documentation
+- this README.md
+
 docker run --name=gerrit-data -v /data busybox true
 
 # You need to have 2 running containers, one for ldap, one for tuleap.

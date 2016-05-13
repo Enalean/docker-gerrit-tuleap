@@ -13,4 +13,4 @@ RUN curl \
 COPY ./run.sh /docker-entrypoint-init.d/run.sh
 RUN chmod 755 /docker-entrypoint-init.d/run.sh
 
-EXPOSE 8084 29418
+EXPOSE 8080 29418

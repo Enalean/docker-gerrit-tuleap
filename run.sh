@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function set_replication_config {
-  gosu ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/replication.config" "$@"
+  gosu ${GERRIT_USER} git config -f "${GERRIT_SITE}/etc/replication.config" --add "$@"
 }
 
 # Customize gerrit.config
@@ -17,7 +17,8 @@ cp -f ${GERRIT_HOME}/replication.jar ${GERRIT_SITE}/plugins/replication.jar
 
 # Customize replication.config
 [ -z "${REMOTE_NAME_URL}" ] || set_replication_config remote.${REMOTE_NAME}.url "${REMOTE_NAME_URL}"
-[ -z "${REMOTE_NAME_PUSH}" ] || set_replication_config remote.${REMOTE_NAME}.push "${REMOTE_NAME_PUSH}"
+[ -z "${REMOTE_NAME_PUSH_1}" ] || set_replication_config remote.${REMOTE_NAME}.push "${REMOTE_NAME_PUSH_1}"
+[ -z "${REMOTE_NAME_PUSH_2}" ] || set_replication_config remote.${REMOTE_NAME}.push "${REMOTE_NAME_PUSH_2}"
 [ -z "${REMOTE_NAME_AUTHGROUP}" ] || set_replication_config remote.${REMOTE_NAME}.authGroup "${REMOTE_NAME_AUTHGROUP}"
 
 init=false
@@ -36,7 +37,6 @@ if [ ! -d /data/git ]; then
         mkdir ${GERRIT_SITE}/git
         chown ${GERRIT_USER}:${GERRIT_USER} ${GERRIT_SITE}/git
     fi
-
     mv ${GERRIT_SITE}/git /data
     mv ${GERRIT_SITE}/db /data
     mv ${GERRIT_SITE}/logs /data

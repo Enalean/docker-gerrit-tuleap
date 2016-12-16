@@ -1,44 +1,31 @@
-FROM  ubuntu:trusty
-
-MAINTAINER Manuel Vacelet, manuel.vacelet@enalean.com
+FROM openjdk:8-jre-alpine
 
 ENV GERRIT_HOME /home/gerrit
+ENV GERRIT_SITE ${GERRIT_HOME}/site
 ENV GERRIT_USER gerrit
-ENV GERRIT_WAR /home/gerrit/gerrit.war
+ENV GERRIT_GROUP gerrit
+ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
+ENV GERRIT_VERSION 2.12.7
 
+RUN apk add --no-cache openssh openssl git su-exec && \
+    addgroup -S "$GERRIT_GROUP" && \
+    adduser -S -D -h "$GERRIT_HOME" -G "$GERRIT_GROUP" "$GERRIT_USER"
 
+USER "$GERRIT_USER"
 
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-7-jre-headless sudo git-core supervisor vim-tiny wget unzip && \
-    wget http://gerrit-releases.storage.googleapis.com/gerrit-2.8.6.1.war && \
-    wget -O /tmp/delete-project.jar https://tuleap.net/file/download.php/101/92/p22_r77/delete-project.jar
+RUN wget "https://gerrit-releases.storage.googleapis.com/gerrit-$GERRIT_VERSION.war" \
+      -O "$GERRIT_WAR"
 
-RUN useradd -m ${GERRIT_USER} && \
-    mkdir -p /var/log/supervisor && \
-    mkdir -p $GERRIT_HOME/gerrit && \
-    mv gerrit-2.8.6.1.war $GERRIT_WAR && \
-    chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
+COPY gerrit.config "$GERRIT_HOME/gerrit-initial.config"
+COPY replication.config "$GERRIT_HOME/replication-initial.config"
 
-USER gerrit
-
-RUN java -jar $GERRIT_WAR init --batch -d $GERRIT_HOME/gerrit && \
-    unzip -j $GERRIT_WAR WEB-INF/plugins/replication.jar -d $GERRIT_HOME/gerrit/plugins && \
-    cp /tmp/delete-project.jar $GERRIT_HOME/gerrit/plugins
-
-COPY gerrit.config $GERRIT_HOME/gerrit/etc/gerrit.config
-COPY replication.config $GERRIT_HOME/gerrit/etc/replication.config
+COPY run.sh "$GERRIT_HOME/run.sh"
+COPY start-gerrit.sh "$GERRIT_HOME/start-gerrit.sh"
 
 USER root
 
-RUN rm -rf /tmp/delete-project.jar $GERRIT_WAR
-#RUN chown -R ${GERRIT_USER}:${GERRIT_USER} $GERRIT_HOME
-
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-COPY run.sh /run.sh
-
-VOLUME /data
+VOLUME "$GERRIT_SITE"
 
 EXPOSE 8080 29418
-ENTRYPOINT [ "./run.sh" ]
+
+ENTRYPOINT "$GERRIT_HOME/run.sh"

@@ -30,7 +30,7 @@ COPY start-gerrit.sh "$GERRIT_HOME/start-gerrit.sh"
 
 USER root
 
-VOLUME "$GERRIT_SITE"
+VOLUME "$GERRIT_HOME"
 
 EXPOSE 8080 29418
 

@@ -23,6 +23,26 @@ check_configuration_files() {
     check_replication_configuration
 }
 
+create_gerrit_user_ssh_key() {
+    mkdir -p /home/gerrit/.ssh/
+    chmod 0700  /home/gerrit/.ssh/
+    ssh-keygen -P "" -f /home/gerrit/.ssh/id_rsa
+}
+
+pair_with_tuleap_server() {
+    echo "Pairing with Tuleap server"
+    sleep 5
+    su -l gerrit -c "ssh -oStrictHostKeyChecking=no gitolite@tuleap info"
+}
+
+manage_ssh_key() {
+    if [ ! -d /home/gerrit/.ssh/ ]; then
+        create_gerrit_user_ssh_key
+    else
+        pair_with_tuleap_server
+    fi
+}
+
 init_or_upgrade_gerrit() {
     java -jar "$GERRIT_WAR" init --batch --no-auto-start \
       --install-plugin=replication --install-plugin=download-commands\
@@ -32,6 +52,7 @@ init_or_upgrade_gerrit() {
 
 
 check_configuration_files
+manage_ssh_key
 init_or_upgrade_gerrit
 
 exec "$GERRIT_SITE/bin/gerrit.sh" daemon

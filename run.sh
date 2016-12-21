@@ -6,4 +6,4 @@ fix_permissions() {
 }
 
 fix_permissions
-"$GERRIT_HOME/start-gerrit.sh"
+su-exec gerrit "$GERRIT_HOME/start-gerrit.sh"

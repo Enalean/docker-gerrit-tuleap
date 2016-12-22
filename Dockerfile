@@ -6,8 +6,8 @@ ENV GERRIT_SITE ${GERRIT_HOME}/site
 ENV GERRIT_USER gerrit
 ENV GERRIT_GROUP gerrit
 ENV GERRIT_WAR ${GERRIT_LIB}/gerrit.war
-ENV GERRIT_VERSION 2.12.7
-ENV GERRIT_PLUGIN_VERSION stable-2.12
+ENV GERRIT_VERSION 2.13.4
+ENV GERRIT_PLUGIN_VERSION stable-2.13
 
 RUN apk add --no-cache openssh openssl git su-exec && \
     addgroup -S "$GERRIT_GROUP" && \
